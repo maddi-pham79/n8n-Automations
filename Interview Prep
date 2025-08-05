@@ -1,0 +1,1479 @@
+{
+  "name": "Interview Prep",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {
+          "labelIds": [
+            "Label_7536180162666656373"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1120,
+        64
+      ],
+      "id": "71e28f0f-f784-4f32-a270-bdc9ff98cb15",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Ry2fstknZwryWaL0",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.email_content }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are an AI email parsing assistant. Extract structured information for EACH email provided.\n\nInput (multiple emails): \n{{ $json.email_content }}\n\nTasks:\n- For every email, return a separate JSON object.\n- Each object must include:\n  - company_name\n  - company_website\n  - position_name\n  - interview_datetime\n  - hr_name\n  - hr_contact\n\n⚠ RULES:\n- Return ALL emails in a JSON array.\n- Do NOT omit any key. If data missing, return \"\".\n- No guessing values.\n- No extra text outside the JSON array.\n\nExample:\n[\n  {\n    \"company_name\": \"ABC Tech\",\n    \"company_website\": \"https://abc.com\",\n    \"position_name\": \"Senior PM\",\n    \"interview_datetime\": \"2025-08-15 5:00PM\",\n    \"hr_name\": \"Jane Doe\",\n    \"hr_contact\": \"jane.doe@abc.com\"\n  },\n  {\n    \"company_name\": \"XYZ Ltd\",\n    \"company_website\": \"\",\n    \"position_name\": \"Product Lead\",\n    \"interview_datetime\": \"2025-08-20 3:00PM\",\n    \"hr_name\": \"\",\n    \"hr_contact\": \"\"\n  }\n]"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        224,
+        -48
+      ],
+      "id": "3d9237a3-12fe-4521-8117-f78c63f810fe",
+      "name": "Basic LLM Chain",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        256,
+        176
+      ],
+      "id": "55c413bf-7113-49df-8c33-c53463f58cf3",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GjFdIdNxszyjPcwN",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"company_name\": \"eUp Tech\",\n  \"company_website\": \"https://www.euptech.com\",\n  \"position_name\": \"Product Manager\",\n  \"interview_datetime\": \"2025-08-15 5:00PM\",\n  \"hr_name\": \"Lan Nguyen\",\n  \"hr_contact\": \"lan.nguyen@euptech.com\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        384,
+        176
+      ],
+      "id": "3288c9b6-8efb-442c-96e1-bc907aa8deb5",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ",
+          "mode": "list",
+          "cachedResultName": "Education n8n sheets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1398584131,
+          "mode": "list",
+          "cachedResultName": "Sheet9",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit#gid=1398584131"
+        },
+        "event": "rowUpdate",
+        "options": {
+          "columnsToWatch": "={{ [\"Status\"] }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1120,
+        -272
+      ],
+      "id": "a9300f02-17d0-404e-b566-1beede3bbb55",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "zJHkhF6szLnmf1AW",
+          "name": "Google Sheets Trigger account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.Status }}",
+                    "rightValue": "Contacted",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "b94d9bf0-c832-4638-8b27-a10af82fcbf8"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -896,
+        -272
+      ],
+      "id": "672beae7-eef9-4cf5-8646-3fec6d995c83",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ",
+          "mode": "list",
+          "cachedResultName": "Education n8n sheets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1398584131,
+          "mode": "list",
+          "cachedResultName": "Sheet9",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit#gid=1398584131"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Company Name",
+              "lookupValue": "={{ $json.output.company_name }}"
+            },
+            {
+              "lookupColumn": "Title Name",
+              "lookupValue": "={{ $json.output.position_name }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        624,
+        64
+      ],
+      "id": "0dfb6276-2408-44a0-b205-595a5409ccfd",
+      "name": "Get from Application sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "noDcpW7quePhvVhL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ",
+          "mode": "list",
+          "cachedResultName": "Education n8n sheets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 855709318,
+          "mode": "list",
+          "cachedResultName": "Interview Prep Tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit#gid=855709318"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Job Description": "={{ $json['Job Link'] }}",
+            "Company Name": "={{ $json['Company Name'] }}",
+            "Position Name": "={{ $json['Title Name'] }}",
+            "Match score": "={{ $json['Match Score'] }}",
+            "CV Link": "={{ $json['CV Link'] }}"
+          },
+          "matchingColumns": [
+            "Job Description"
+          ],
+          "schema": [
+            {
+              "id": "Company Name",
+              "displayName": "Company Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company Website",
+              "displayName": "Company Website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Position Name",
+              "displayName": "Position Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Job Description",
+              "displayName": "Job Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Match score",
+              "displayName": "Match score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Interview Date",
+              "displayName": "Interview Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Contact Name",
+              "displayName": "Contact Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Contact Number",
+              "displayName": "Contact Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "CV Link",
+              "displayName": "CV Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -672,
+        -272
+      ],
+      "id": "4c03dd0a-e7b5-4db3-9bed-88f4a29a4117",
+      "name": "Append or update row in sheet2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "noDcpW7quePhvVhL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1104,
+        352
+      ],
+      "id": "99f8599f-2c4d-4524-8c48-1ddfc7ed7ac5",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"company_summary\": \"Max 300 characters\",\n  \"questions\": [\n    {\n      \"q\": \"Question 1\",\n      \"confidence\": \"High\",\n      \"answer\": \"Short answer\"\n    },\n    {\n      \"q\": \"Question 2\",\n      \"confidence\": \"Medium\",\n      \"answer\": \"Short answer\"\n    },\n    {\n      \"q\": \"Question 3\",\n      \"confidence\": \"Low\",\n      \"answer\": \"Short answer\"\n    },\n    {\n      \"q\": \"Question 4\",\n      \"confidence\": \"High\",\n      \"answer\": \"Short answer\"\n    },\n    {\n      \"q\": \"Question 5\",\n      \"confidence\": \"Medium\",\n      \"answer\": \"Short answer\"\n    }\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        336,
+        576
+      ],
+      "id": "64852ead-74c5-4239-8935-cd3b398400f7",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ",
+          "mode": "list",
+          "cachedResultName": "Education n8n sheets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1398584131,
+          "mode": "list",
+          "cachedResultName": "Sheet9",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit#gid=1398584131"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Status",
+              "lookupValue": "Got interviewed"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -880,
+        352
+      ],
+      "id": "c8bfef22-0ba2-4a48-b05b-b9316d01e272",
+      "name": "Get JD",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "noDcpW7quePhvVhL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "documentURL": "https://docs.google.com/document/d/1k3uQapEHyUmRnxFtp_8SQCo1Qk7AKFhtbYxeJdTVybM/edit?tab=t.0"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        352
+      ],
+      "id": "a38050db-0d32-4eb6-92d6-be0434c5ad2d",
+      "name": "Get CV",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "ld3R0TaddRldTHLM",
+          "name": "Google Docs account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const filtered = $input.all().filter(item => {\n  const website = item.json[\"Company Website\"];\n  const prepLink = item.json[\"Interview Prep\"];\n  return website && website.trim() !== \"\" && prepLink && prepLink.trim() !== \"\";\n});\n\nreturn filtered;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        352
+      ],
+      "id": "dac9dfc3-cd65-41aa-ac13-0d70c19df139",
+      "name": "Filter the ones with websites"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ",
+          "mode": "list",
+          "cachedResultName": "Education n8n sheets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 855709318,
+          "mode": "list",
+          "cachedResultName": "Interview Prep Tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit#gid=855709318"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -432,
+        352
+      ],
+      "id": "bed3e0ef-c93a-4e1e-a330-c4a651f405d7",
+      "name": "Get list of companies",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "noDcpW7quePhvVhL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Get CV').item.json.content }} {{ $('Get JD').item.json['Job Description'] }} {{ $('Scape the URL for company information').item.json.data.markdown }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are an Interview Preparation Assistant. Generate a compact, structured response for interview practice.  Inputs: 1. Job Description: {{ $('Get JD').item.json['Job Description'] }} 2. Candidate CV Summary: {{ $('Get CV').item.json.content }} 3. Company Info: {{ $('Scape the URL for company information').item.json.data.markdown }}  Tasks: - Generate exactly 5 interview questions aligned to the job description and role responsibilities. - For each question, provide:     • Confidence Level: High / Medium / Low (Determine this strictly by comparing JD requirements with the candidate's CV summary)     • Short Sample Answer: Max 40 words - Add a 3-sentence company summary (max 300 characters) based on provided company information or website context (if available).  \n\nRules: - Confidence Level is based only on how well the candidate's CV aligns with JD requirements. - Keep answers under 40 words. - No extra text, only JSON output.\n\n{\n  \"company_summary\": \"Max 300 characters\",\n  \"questions\": [\n    {\n      \"q\": \"Question 1\",\n      \"confidence\": \"High\",\n      \"answer\": \"Short answer\"\n    },\n    {\n      \"q\": \"Question 2\",\n      \"confidence\": \"Medium\",\n      \"answer\": \"Short answer\"\n    },\n    {\n      \"q\": \"Question 3\",\n      \"confidence\": \"Low\",\n      \"answer\": \"Short answer\"\n    },\n    {\n      \"q\": \"Question 4\",\n      \"confidence\": \"High\",\n      \"answer\": \"Short answer\"\n    },\n    {\n      \"q\": \"Question 5\",\n      \"confidence\": \"Medium\",\n      \"answer\": \"Short answer\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        240,
+        352
+      ],
+      "id": "bcbf5a7d-34a7-4524-8f49-8a5fd149a33b",
+      "name": "Interview Prep",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const interviewPrep = $(\"Interview Prep\").all()[0]?.json?.output?.questions;\nconst separatedQuestions = interviewPrep.map((question, index) => {\n  return {\n    id: index,\n    question: question.q,\n    confidence: question.confidence,\n    answer: question.answer,\n  };\n});\nreturn separatedQuestions;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        864,
+        352
+      ],
+      "id": "eab77996-fcf6-4e63-8ee3-340546f96c8a",
+      "name": "Format the code for items"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Duplicate template').item.json.id }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1kTf5RZFIujKk1K962Y-mSrpd-LGW64Ff0OoLX7ffddU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Question": "={{ $json.question }}",
+            "Confidence Score": "={{ $json.confidence }}",
+            "Sample Answer": "={{ $json.answer }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Question",
+              "displayName": "Question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Confidence Score",
+              "displayName": "Confidence Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sample Answer",
+              "displayName": "Sample Answer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1088,
+        352
+      ],
+      "id": "d5a0d0c9-8753-43d8-9a9f-67057c31da86",
+      "name": "Update List",
+      "executeOnce": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "noDcpW7quePhvVhL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ",
+          "mode": "list",
+          "cachedResultName": "Education n8n sheets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 855709318,
+          "mode": "list",
+          "cachedResultName": "Interview Prep Tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit#gid=855709318"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Interview Prep": "=https://docs.google.com/spreadsheets/d/{{ $('Duplicate template').item.json.id }}",
+            "CV Link": "={{ $('Get list of companies').item.json['CV Link'] }}"
+          },
+          "matchingColumns": [
+            "CV Link"
+          ],
+          "schema": [
+            {
+              "id": "Company Name",
+              "displayName": "Company Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Company Website",
+              "displayName": "Company Website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Position Name",
+              "displayName": "Position Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Job Description",
+              "displayName": "Job Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Match score",
+              "displayName": "Match score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Interview Date",
+              "displayName": "Interview Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Contact Name",
+              "displayName": "Contact Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Contact Number",
+              "displayName": "Contact Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "CV Link",
+              "displayName": "CV Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Interview Prep",
+              "displayName": "Interview Prep",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1312,
+        352
+      ],
+      "id": "023ad983-7c90-4fdf-9762-35dee2b9a76a",
+      "name": "Update Prep Link",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "noDcpW7quePhvVhL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "1tXEDE_vnCdoU0PPqRAMNSn3WP-K4ctswpZTNB90S9MU",
+          "mode": "list",
+          "cachedResultName": "_Interview Prep Questions",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tXEDE_vnCdoU0PPqRAMNSn3WP-K4ctswpZTNB90S9MU/edit?usp=drivesdk"
+        },
+        "name": "=Interview Prep_ {{ $('Get JD').item.json['Company Name'] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        640,
+        352
+      ],
+      "id": "c70a2cbb-b23c-4efe-9d59-6d7ebd19e392",
+      "name": "Duplicate template",
+      "executeOnce": false,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "4wjDH5tJz6THfZTM",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ",
+          "mode": "list",
+          "cachedResultName": "Education n8n sheets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 855709318,
+          "mode": "list",
+          "cachedResultName": "Interview Prep",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit#gid=855709318"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Company Name": "={{ $('Basic LLM Chain').item.json.output.company_name }}",
+            "Company Website": "={{ $('Basic LLM Chain').item.json.output.company_website }}",
+            "Contact Name": "={{ $('Basic LLM Chain').item.json.output.hr_name }}",
+            "Contact Number": "={{ $('Basic LLM Chain').item.json.output.hr_contact }}",
+            "Interview Date": "={{ $('Basic LLM Chain').item.json.output.interview_datetime }}",
+            "Job Description": "={{ $json['Job Link'] }}",
+            "Match score": "={{ $json['Match Score'] }}",
+            "Position Name": "={{ $json['Title Name'] }}",
+            "CV Link": "={{ $json['CV Link'] }}"
+          },
+          "matchingColumns": [
+            "Interview Date"
+          ],
+          "schema": [
+            {
+              "id": "Company Name",
+              "displayName": "Company Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company Website",
+              "displayName": "Company Website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Position Name",
+              "displayName": "Position Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Job Description",
+              "displayName": "Job Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Match score",
+              "displayName": "Match score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Interview Date",
+              "displayName": "Interview Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Contact Name",
+              "displayName": "Contact Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Contact Number",
+              "displayName": "Contact Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CV Link",
+              "displayName": "CV Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        848,
+        -48
+      ],
+      "id": "6ed1fee1-fbe9-43e1-92e2-ad14d98a039f",
+      "name": " Update Interview Prep",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "noDcpW7quePhvVhL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ",
+          "mode": "list",
+          "cachedResultName": "Education n8n sheets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1398584131,
+          "mode": "list",
+          "cachedResultName": "Sheet9",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit#gid=1398584131"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "Got interviewed",
+            "Job Link": "={{ $json['Job Link'] }}"
+          },
+          "matchingColumns": [
+            "Job Link"
+          ],
+          "schema": [
+            {
+              "id": "Publish on",
+              "displayName": "Publish on",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Company Name",
+              "displayName": "Company Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Title Name",
+              "displayName": "Title Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Job Link",
+              "displayName": "Job Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Job Description",
+              "displayName": "Job Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Match Score",
+              "displayName": "Match Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "CV Link",
+              "displayName": "CV Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "PDF Link",
+              "displayName": "PDF Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        848,
+        160
+      ],
+      "id": "a37a689a-1262-4947-b347-64f4df75c5f3",
+      "name": "Update Application tracker",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "noDcpW7quePhvVhL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all(); // Get all incoming emails\nconst stopwords = new Set([\n  \"the\",\"and\",\"for\",\"with\",\"you\",\"your\",\"at\",\"from\",\"on\",\"to\",\"in\",\"of\",\n  \"we\",\"will\",\"is\",\"are\",\"a\",\"an\",\"dear\",\"regarding\",\"interview\",\"invitation\",\"application\"\n]);\n\nconst results = items.map(item => {\n  const subject = (item.json.Subject || item.json.subject || \"\").trim();\n  if (!subject) {\n    return {\n      json: {\n        original_subject: \"\",\n        company_candidate: \"\",\n        top_words: []\n      }\n    };\n  }\n\n  const words = subject.split(/\\s+/);\n  const freq = {};\n\n  for (const word of words) {\n    const cleanWord = word.replace(/[^a-zA-Z]/g, \"\").toLowerCase();\n    if (cleanWord && !stopwords.has(cleanWord) && cleanWord.length > 2) {\n      freq[cleanWord] = (freq[cleanWord] || 0) + 1;\n    }\n  }\n\n  const sorted = Object.entries(freq).sort((a, b) => b[1] - a[1]);\n\n  return {\n    json: {\n      original_subject: subject,\n      company_candidate: sorted.length ? sorted[0][0] : \"\",\n      top_words: sorted.slice(0, 5).map(([word, count]) => ({ word, count }))\n    }\n  };\n});\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -672,
+        64
+      ],
+      "id": "e71344aa-2c03-4c82-89e1-da8f49da4607",
+      "name": "Get top words"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "simple": false,
+        "filters": {
+          "labelIds": [
+            "Label_7536180162666656373"
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -896,
+        64
+      ],
+      "id": "37f47638-8998-4038-95ad-6d6c8198d14a",
+      "name": "Get \"Interview\" Label",
+      "webhookId": "ca29c6be-daa4-437d-9e0b-8d4e490e863c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Ry2fstknZwryWaL0",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ",
+          "mode": "list",
+          "cachedResultName": "Education n8n sheets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1398584131,
+          "mode": "list",
+          "cachedResultName": "Sheet9",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit#gid=1398584131"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Status",
+              "lookupValue": "PDF Ready"
+            }
+          ]
+        },
+        "combineFilters": "OR",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -448,
+        64
+      ],
+      "id": "3f338143-859e-44ad-a7d8-235f15afc9a5",
+      "name": "Get PDF Ready Jobs",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "noDcpW7quePhvVhL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get all PDF-ready jobs from Google Sheets\nconst rows = $input.all().map(item => ({\n  company: (item.json[\"Company Name\"] || \"\").toLowerCase(),\n  title: (item.json[\"Title Name\"] || \"\").toLowerCase(),\n  original: item.json\n}));\n\n// 2. Get all emails with their top words & original subject\nconst emails = $(\"Get top words\").all().map(email => ({\n  subject: email.json.original_subject || \"\",\n  topWords: (email.json.top_words || []).map(w => w.word.toLowerCase())\n}));\n\nconst matches = [];\n\nfor (const email of emails) {\n  const emailTopWords = email.topWords;\n  if (!emailTopWords || emailTopWords.length === 0) continue;\n\n  // Match by company name first\n  const companyMatches = rows.filter(row =>\n    emailTopWords.some(word => row.company.includes(word))\n  );\n\n  if (companyMatches.length === 0) continue;\n\n  // Group by company\n  const grouped = companyMatches.reduce((acc, row) => {\n    if (!acc[row.company]) acc[row.company] = [];\n    acc[row.company].push(row);\n    return acc;\n  }, {});\n\n  for (const [company, jobs] of Object.entries(grouped)) {\n    let finalJobs = jobs;\n\n    // If multiple jobs for same company → refine by title\n    if (jobs.length > 1) {\n      const refined = jobs.filter(row =>\n        emailTopWords.some(word => row.title.includes(word))\n      );\n      if (refined.length > 0) finalJobs = refined;\n    }\n\n    for (const job of finalJobs) {\n      matches.push({\n        json: {\n          company_name: job.original[\"Company Name\"],\n          title_name: job.original[\"Title Name\"],\n          matched_words: emailTopWords.filter(word =>\n            job.company.includes(word) || job.title.includes(word)\n          ),\n          email_subject: email.subject,\n          match_status: \"matched\"\n        }\n      });\n    }\n  }\n}\n\nreturn matches;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        64
+      ],
+      "id": "643ff1b6-854f-4ff2-b718-26cc2a9385bc",
+      "name": "Compare top words & jobs",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "operation": "scrape",
+        "url": "={{ $json['Company Website'] }}",
+        "requestOptions": {}
+      },
+      "type": "@mendable/n8n-nodes-firecrawl.firecrawl",
+      "typeVersion": 1,
+      "position": [
+        16,
+        352
+      ],
+      "id": "a509cae2-aefb-4b27-9feb-4969ca771e9f",
+      "name": "Scape the URL for company information",
+      "credentials": {
+        "firecrawlApi": {
+          "id": "V31FjRmQTY8uKlhP",
+          "name": "Firecrawl account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get matched jobs from previous node (Function 2 output)\nconst matches = $input.all().map(item => ({\n  subject: (item.json.email_subject || \"\").toLowerCase().trim(), // Subject to match\n  company: (item.json.company_name || \"\").toLowerCase(),\n  title: (item.json.title_name || \"\").toLowerCase(),\n  matched_words: item.json.matched_words || []\n}));\n\n// 2. Get ALL emails from Gmail node\nconst allInterviewEmails = $('Get \"Interview\" Label').all().map(e => ({\n  subject: (e.json.Subject || \"\").toLowerCase().trim(),\n  text: e.json.text || \"\"\n}));\n\n// 3. NO fallback yet - we prioritize matching\nconst results = matches.map(match => {\n  // Try to match email where subject line closely matches the job subject\n  let emailMatch = allInterviewEmails.find(e => e.subject === match.subject);\n\n  // If strict match fails, use partial match (subject contains company or matched words)\n  if (!emailMatch) {\n    emailMatch = allInterviewEmails.find(e => \n      e.subject.includes(match.company) ||\n      match.matched_words.some(word => e.subject.includes(word))\n    );\n  }\n\n  return {\n    json: {\n      company_name: match.company,\n      title_name: match.title,\n      email_subject: match.subject, // Job's subject\n      email_content: emailMatch ? emailMatch.text : \"(No matching email found)\", // Match content or blank\n      matched_words: match.matched_words,\n      match_status: emailMatch ? \"matched\" : \"no_match\"\n    }\n  };\n});\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        64
+      ],
+      "id": "e6a6e337-f6d8-4715-aaf7-d3fefa885409",
+      "name": "Get the email content"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get \"Interview\" Label",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Interview Prep",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Get from Application sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get from Application sheet": {
+      "main": [
+        [
+          {
+            "node": " Update Interview Prep",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Application tracker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get JD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Interview Prep",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get JD": {
+      "main": [
+        [
+          {
+            "node": "Get CV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get CV": {
+      "main": [
+        [
+          {
+            "node": "Get list of companies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter the ones with websites": {
+      "main": [
+        [
+          {
+            "node": "Scape the URL for company information",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get list of companies": {
+      "main": [
+        [
+          {
+            "node": "Filter the ones with websites",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interview Prep": {
+      "main": [
+        [
+          {
+            "node": "Duplicate template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format the code for items": {
+      "main": [
+        [
+          {
+            "node": "Update List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update List": {
+      "main": [
+        [
+          {
+            "node": "Update Prep Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Duplicate template": {
+      "main": [
+        [
+          {
+            "node": "Format the code for items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get top words": {
+      "main": [
+        [
+          {
+            "node": "Get PDF Ready Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get \"Interview\" Label": {
+      "main": [
+        [
+          {
+            "node": "Get top words",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get PDF Ready Jobs": {
+      "main": [
+        [
+          {
+            "node": "Compare top words & jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compare top words & jobs": {
+      "main": [
+        [
+          {
+            "node": "Get the email content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scape the URL for company information": {
+      "main": [
+        [
+          {
+            "node": "Interview Prep",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get the email content": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5b596fe0-a515-4d51-a977-96030bc79341",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "455c04afe429467177cce15d5d0af7fc0d5f8c0c2daa8db84b8dbe645d9a4079"
+  },
+  "id": "UoHCyLnmpQ5yibBf",
+  "tags": [
+    {
+      "createdAt": "2025-07-30T07:01:41.329Z",
+      "updatedAt": "2025-07-30T07:01:41.329Z",
+      "id": "Modo8yhv19w45zhh",
+      "name": "Struggling"
+    }
+  ]
+}
