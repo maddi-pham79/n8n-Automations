@@ -1,0 +1,1426 @@
+{
+  "name": "Linkedin RSS + CV Automation",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        112
+      ],
+      "id": "01a3f039-8b29-480e-9cd2-00fc69b76741",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://rss.app/feeds/bqizrGHBwdl2r8j9.xml",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        80,
+        112
+      ],
+      "id": "9c740d20-a0fa-47fc-9d33-94c9c319a14c",
+      "name": "RSS Read"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst updatedItems = items.map((item) => {\n  const [company, jobTitle, location] =\n    item?.json?.title.split(/ hiring | in /);\n  item.json.company = company;\n  item.json.jobTitle = jobTitle;\n  item.json.location = location;\n  return item;\n});\n\nreturn updatedItems;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        112
+      ],
+      "id": "1d40bd56-f3c8-45e2-972e-03013c960e23",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "documentURL": "https://docs.google.com/document/d/1k3uQapEHyUmRnxFtp_8SQCo1Qk7AKFhtbYxeJdTVybM/edit?tab=t.0"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        848,
+        112
+      ],
+      "id": "d925a248-47aa-4524-9609-9dce53817de3",
+      "name": "Get a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "ld3R0TaddRldTHLM",
+          "name": "Google Docs account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=CV: {{ $json.content }}\nJD: {{ $('Append or update row in sheet').item.json['Job Description'] }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are an AI Career Matcher.  Your task: - Compare a candidate's CV against a job description. - Assign a **match score** from 0 to 100 (100 = perfect fit). - Base your decision on skills, experience, and responsibilities. - DO NOT return explanations or text outside the JSON.  Candidate CV: {{ $json.content }}  Job Description: {{ $('Append or update row in sheet').item.json['Job Description'] }}  Return JSON in this format: {\n  \"match_score\": 82,\n  \"job\": {\n    \"title\": \"Head of Product\",\n    \"link\": \"https://vn.linkedin.com/jobs/view/product-manager-edtech-product-at-eup-4273051504\"\n  }\n}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        1152,
+        0
+      ],
+      "id": "d0f742db-edfc-47cf-b3af-5bf3348dd57e",
+      "name": "Basic LLM Chain",
+      "retryOnFail": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1184,
+        224
+      ],
+      "id": "4fba8163-4601-451f-ba6c-6c29f36365a5",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GjFdIdNxszyjPcwN",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"match_score\": 82,\n  \"job\": {\n    \"title\": \"Head of Product\",\n    \"link\": \"https://vn.linkedin.com/jobs/view/product-manager-edtech-product-at-eup-4273051504\"\n  }\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1312,
+        224
+      ],
+      "id": "54ef7ca3-2c67-4a55-a3e7-c61a2d6632a1",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ",
+          "mode": "list",
+          "cachedResultName": "Education n8n sheets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1398584131,
+          "mode": "list",
+          "cachedResultName": "Sheet9",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit#gid=1398584131"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Job Description": "={{ $('Append or update row in sheet').item.json['Job Description'] }}",
+            "Match Score": "={{ $json.output.match_score }}"
+          },
+          "matchingColumns": [
+            "Job Description"
+          ],
+          "schema": [
+            {
+              "id": "Publish on",
+              "displayName": "Publish on",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Company Name",
+              "displayName": "Company Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Title Name",
+              "displayName": "Title Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Job Link",
+              "displayName": "Job Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Job Description",
+              "displayName": "Job Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Match Score",
+              "displayName": "Match Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "CV Link",
+              "displayName": "CV Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1552,
+        112
+      ],
+      "id": "e376aebb-8b9e-4712-a2a5-cc9095cebc64",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "noDcpW7quePhvVhL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -144,
+        560
+      ],
+      "id": "74571e8a-7418-4796-888c-e300fe1cf8f7",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"Summary\": \"Rewrite professional summary tailored to target role.\",\n\n  \"Job 1 Bullet 1\": \"First achievement for Product Manager role\",\n  \"Job 1 Bullet 2\": \"Second achievement for Product Manager role\",\n  \"Job 1 Bullet 3\": \"Third achievement for Product Manager role\",\n  \"Results Bullet 1\": \"Key measurable impact for Job 1\",\n\n  \"Project 1 Bullet 1\": \"First key detail for TokoBot\",\n  \"Project 1 Bullet 2\": \"Second key detail for TokoBot\",\n  \"Project 1 Results Bullet\": \"Impact/result for TokoBot\",\n\n  \"Project 2 Bullet 1\": \"First detail for Fluxer\",\n  \"Project 2 Bullet 2\": \"Second detail for Fluxer\",\n  \"Project 2 Results Bullet\": \"Impact/result for Fluxer\",\n\n  \"Job 2 Bullet 1\": \"Achievement 1 for Product Systems Designer\",\n  \"Job 2 Bullet 2\": \"Achievement 2 for Product Systems Designer\",\n  \"Job 2 Bullet 3\": \"Achievement 3 for Product Systems Designer\",\n  \"Job 2 Results Bullet\": \"Result for Job 2\",\n\n  \"Project 3 Bullet 1\": \"First detail for Moji ERP\",\n  \"Project 3 Bullet 2\": \"Second detail for Moji ERP\",\n  \"Project 3 Results Bullet\": \"Impact/result for Moji ERP\",\n\n  \"Project 4 Bullet 1\": \"First detail for E-Studio\",\n  \"Project 4 Bullet 2\": \"Second detail for E-Studio\",\n  \"Project 4 Results Bullet\": \"Impact/result for E-Studio\",\n\n  \"Job 3 Bullet 1\": \"Achievement 1 for Junior Project Coordinator\",\n  \"Job 3 Bullet 2\": \"Achievement 2 for Junior Project Coordinator\",\n  \"Job 3 Bullet 3\": \"Achievement 3 for Junior Project Coordinator\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        848,
+        560
+      ],
+      "id": "200163bf-f644-4bca-b837-a9ad86fffa94",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ",
+          "mode": "list",
+          "cachedResultName": "Education n8n sheets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1398584131,
+          "mode": "list",
+          "cachedResultName": "Sheet9",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit#gid=1398584131"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Title Name": "={{ $json.jobTitle }}",
+            "Company Name": "={{ $json.company }}",
+            "Publish on": "={{ $json.pubDate }}",
+            "Job Link": "={{ $json.link }}",
+            "Job Description": "={{ $json.contentSnippet }}",
+            "Status": "New"
+          },
+          "matchingColumns": [
+            "Job Description"
+          ],
+          "schema": [
+            {
+              "id": "Publish on",
+              "displayName": "Publish on",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company Name",
+              "displayName": "Company Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Title Name",
+              "displayName": "Title Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Job Link",
+              "displayName": "Job Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Job Description",
+              "displayName": "Job Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Match Score",
+              "displayName": "Match Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "CV Link",
+              "displayName": "CV Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "PDF Link",
+              "displayName": "PDF Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        528,
+        112
+      ],
+      "id": "3ce9a373-1356-4ecb-96b5-41248f30a611",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "noDcpW7quePhvVhL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        1152,
+        688
+      ],
+      "id": "6f764ae3-01f9-4a76-8861-bc41da366acc",
+      "name": "Schedule Trigger1"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json['CV Link'] }}",
+          "mode": "url"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {
+              "docsToFormat": "application/pdf"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1568,
+        688
+      ],
+      "id": "aa1bca86-d10a-4746-ac6d-7ca049a2c59d",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "4wjDH5tJz6THfZTM",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "=CV_ {{ $('Get \"CV Reviewed\"').item.json['Title Name'] }}_{{ $('Get \"CV Reviewed\"').item.json['Company Name'] }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "https://drive.google.com/drive/u/0/folders/1L9_3jyrndybTArlOd9T3JIlSV4ii184H",
+          "mode": "url"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1776,
+        688
+      ],
+      "id": "0d109820-27dd-4fd0-bbc6-04e6358b4a91",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "4wjDH5tJz6THfZTM",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "documentURL": "https://docs.google.com/document/d/1k3uQapEHyUmRnxFtp_8SQCo1Qk7AKFhtbYxeJdTVybM/edit?tab=t.0"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        80,
+        560
+      ],
+      "id": "69e96f84-870b-4ebd-9324-fd1479df0a4a",
+      "name": "Get CV",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "ld3R0TaddRldTHLM",
+          "name": "Google Docs account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ",
+          "mode": "list",
+          "cachedResultName": "Education n8n sheets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1398584131,
+          "mode": "list",
+          "cachedResultName": "Sheet9",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit#gid=1398584131"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Status",
+              "lookupValue": "Potential"
+            },
+            {
+              "lookupColumn": "Status",
+              "lookupValue": "Not Applying"
+            }
+          ]
+        },
+        "combineFilters": "OR",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        304,
+        560
+      ],
+      "id": "fe0b035e-217f-4466-8c3e-e4dc2010b535",
+      "name": "Get JDs",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "noDcpW7quePhvVhL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.Status }}",
+                    "rightValue": "Potential",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "d09f90ac-249e-414b-8eb1-25ee71845ee0"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Potential"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6a8a7a43-f581-44ed-8bd4-e632198c27c4",
+                    "leftValue": "={{ $json.Status }}",
+                    "rightValue": "Not Applying",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Not Applying"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        528,
+        560
+      ],
+      "id": "8d168c98-6a38-4cd5-b2f3-ae3299672c5b",
+      "name": "Get Potential & Not Applying"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=JD: {{ $json['Job Description'] }}\nCV: {{ $('Get CV').item.json.content }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are an AI CV Optimization Assistant specialized in tailoring CV content for target roles.\n\n⸻\n\nYour Role\n\t1.\tInputs Provided\n\t•\tCandidate’s Current CV: \n{{ $('Get CV').item.json.content }}\n\t•\tTarget Job Description: \n{{ $json['Job Description'] }}\n\t2.\tOutputs Required\n\t•\tProfessional Summary: Rewrite into a maximum of 4 concise, Harvard-style sentences, tailored to the target role, emphasizing skills, domain expertise, and achievements.\n\t•\tExperience Section: Rewrite bullet points for the most relevant roles and projects, integrating keywords from the job description, and highlight measurable results where possible.\n\n⸻\n\nGuidelines\n\t•\tMaintain a Harvard-style CV tone: clear, concise, and achievement-oriented.\n\t•\tStart each bullet point with strong action verbs.\n\t•\tUse measurable results where possible.\n\t•\tDo not fabricate achievements; align with provided CV and job description.\n\t•\tFocus on roles in correct order and corresponding projects.\n\t•\tOutput strictly in JSON format only (no extra explanations, no markdown).\n\n⸻\n\nNOTE\n\t•\tJob Order:\n\t•\tJob 1: Product Manager\n\t•\tJob 2: Product Systems Designer\n\t•\tJob 3: Junior Project Coordinator\n\t•\tProject Order:\n\t•\tProject 1: TokoBot\n\t•\tProject 2: Fluxer\n\t•\tProject 3: Moji ERP\n\t•\tProject 4: E-Studio\n\n\n{\n  \"Summary\": \"Rewrite professional summary tailored to target role.\",\n\n  \"Job 1 Bullet 1\": \"First achievement for Product Manager role\",\n  \"Job 1 Bullet 2\": \"Second achievement for Product Manager role\",\n  \"Job 1 Bullet 3\": \"Third achievement for Product Manager role\",\n  \"Results Bullet 1\": \"Key measurable impact for Job 1\",\n\n  \"Project 1 Bullet 1\": \"First key detail for TokoBot\",\n  \"Project 1 Bullet 2\": \"Second key detail for TokoBot\",\n  \"Project 1 Results Bullet\": \"Impact/result for TokoBot\",\n\n  \"Project 2 Bullet 1\": \"First detail for Fluxer\",\n  \"Project 2 Bullet 2\": \"Second detail for Fluxer\",\n  \"Project 2 Results Bullet\": \"Impact/result for Fluxer\",\n\n  \"Job 2 Bullet 1\": \"Achievement 1 for Product Systems Designer\",\n  \"Job 2 Bullet 2\": \"Achievement 2 for Product Systems Designer\",\n  \"Job 2 Bullet 3\": \"Achievement 3 for Product Systems Designer\",\n  \"Job 2 Results Bullet\": \"Result for Job 2\",\n\n  \"Project 3 Bullet 1\": \"First detail for Moji ERP\",\n  \"Project 3 Bullet 2\": \"Second detail for Moji ERP\",\n  \"Project 3 Results Bullet\": \"Impact/result for Moji ERP\",\n\n  \"Project 4 Bullet 1\": \"First detail for E-Studio\",\n  \"Project 4 Bullet 2\": \"Second detail for E-Studio\",\n  \"Project 4 Results Bullet\": \"Impact/result for E-Studio\",\n\n  \"Job 3 Bullet 1\": \"Achievement 1 for Junior Project Coordinator\",\n  \"Job 3 Bullet 2\": \"Achievement 2 for Junior Project Coordinator\",\n  \"Job 3 Bullet 3\": \"Achievement 3 for Junior Project Coordinator\"\n}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        752,
+        400
+      ],
+      "id": "4e1de2a0-4bf5-450b-9a5b-5e9e782a22d4",
+      "name": "Generate CV"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all incoming rows\nconst items = $input.all();\n\n// Filter rows where status is NOT \"Not Applying\"\nconst rowsToKeep = items.filter(item => item.json.Status !== \"Not Applying\");\n\n// Extract the row numbers for rows to delete\nconst rowsToDelete = items\n  .filter(item => item.json.Status === \"Not Applying\")\n  .map(item => item.json.row_number);\n\n// Return the rows to delete (so you can use in Google Sheets Delete node)\nreturn rowsToDelete.map(rowNum => ({\n  json: {\n    row_number: rowNum\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        848,
+        704
+      ],
+      "id": "97d1f542-9436-46e3-8c80-ff4413b88bde",
+      "name": "Delete the Not Applying Job Rows"
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "1aAF_tRAwGHCDXmXPL5Ich7U2ieHC3KEeGVsYIxV3U8M",
+          "mode": "list",
+          "cachedResultName": "_CV_Template",
+          "cachedResultUrl": "https://docs.google.com/document/d/1aAF_tRAwGHCDXmXPL5Ich7U2ieHC3KEeGVsYIxV3U8M/edit?usp=drivesdk"
+        },
+        "name": "=CV_ {{ $('Get JDs').item.json['Company Name'] }}_{{ $('Get JDs').item.json['Title Name'] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1152,
+        400
+      ],
+      "id": "fff57245-b4b1-407a-ac78-d1afc490cb89",
+      "name": "Duplicate CV Template",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "4wjDH5tJz6THfZTM",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "replaceAll",
+              "text": "{{Summary}}",
+              "replaceText": "={{ $('Generate CV').item.json.output.Summary }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{Job Bullet 11}}",
+              "replaceText": "={{ $('Generate CV').item.json.output['Job 1 Bullet 1'] }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{Job Bullet 21}}",
+              "replaceText": "={{ $('Generate CV').item.json.output['Job 1 Bullet 2'] }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{Job Bullet 31}}",
+              "replaceText": "={{ $('Generate CV').item.json.output['Job 1 Bullet 3'] }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{Results Bullet 1}}",
+              "replaceText": "={{ $('Generate CV').item.json.output['Results Bullet 1'] }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{Project Bullet 11}}",
+              "replaceText": "={{ $('Generate CV').item.json.output['Project 1 Bullet 1'] }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{Project Bullet 21}}",
+              "replaceText": "={{ $('Generate CV').item.json.output['Project 1 Bullet 2'] }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{Project Results Bullet 1}}",
+              "replaceText": "={{ $('Generate CV').item.json.output['Project 1 Results Bullet'] }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{Project Bullet 12}}",
+              "replaceText": "={{ $('Generate CV').item.json.output['Project 2 Bullet 1'] }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{Project Bullet 22}}",
+              "replaceText": "={{ $('Generate CV').item.json.output['Project 2 Bullet 2'] }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{Project Results Bullet 2}}",
+              "replaceText": "={{ $('Generate CV').item.json.output['Project 2 Results Bullet'] }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{Job Bullet 12}}",
+              "replaceText": "={{ $('Generate CV').item.json.output['Job 2 Bullet 1'] }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{Job Bullet 22}}",
+              "replaceText": "={{ $('Generate CV').item.json.output['Job 2 Bullet 2'] }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{Job Bullet 32}}",
+              "replaceText": "={{ $('Generate CV').item.json.output['Job 2 Bullet 3'] }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{Results Bullet 2}}",
+              "replaceText": "={{ $('Generate CV').item.json.output['Job 2 Results Bullet'] }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{Project Bullet 13}}",
+              "replaceText": "={{ $('Generate CV').item.json.output['Project 3 Bullet 1'] }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{Project Bullet 23}}",
+              "replaceText": "={{ $('Generate CV').item.json.output['Project 3 Bullet 2'] }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{Project Results Bullet 3}}",
+              "replaceText": "={{ $('Generate CV').item.json.output['Project 3 Results Bullet'] }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{Project Bullet 14}}",
+              "replaceText": "={{ $('Generate CV').item.json.output['Project 4 Bullet 1'] }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{Project Bullet 24}}",
+              "replaceText": "={{ $('Generate CV').item.json.output['Project 4 Bullet 2'] }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{Project Results Bullet 4}}",
+              "replaceText": "={{ $('Generate CV').item.json.output['Project 4 Results Bullet'] }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{Job Bullet 13}}",
+              "replaceText": "={{ $('Generate CV').item.json.output['Job 3 Bullet 1'] }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{Job Bullet 23}}",
+              "replaceText": "={{ $('Generate CV').item.json.output['Job 3 Bullet 2'] }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{Job Bullet 33}}",
+              "replaceText": "={{ $('Generate CV').item.json.output['Job 3 Bullet 3'] }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        400
+      ],
+      "id": "eec7926b-ff75-4524-b88b-e61ddce3d016",
+      "name": "Update new CV",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "ld3R0TaddRldTHLM",
+          "name": "Google Docs account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ",
+          "mode": "list",
+          "cachedResultName": "Education n8n sheets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1398584131,
+          "mode": "list",
+          "cachedResultName": "Sheet9",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit#gid=1398584131"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Job Description": "={{ $('Get JDs').item.json['Job Description'] }}",
+            "Status": "CV Ready",
+            "CV Link": "=https://docs.google.com/document/d/{{ $json.documentId }}"
+          },
+          "matchingColumns": [
+            "Job Description"
+          ],
+          "schema": [
+            {
+              "id": "Publish on",
+              "displayName": "Publish on",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Company Name",
+              "displayName": "Company Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Title Name",
+              "displayName": "Title Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Job Link",
+              "displayName": "Job Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Job Description",
+              "displayName": "Job Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Match Score",
+              "displayName": "Match Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CV Link",
+              "displayName": "CV Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1600,
+        400
+      ],
+      "id": "145c44a3-9f6d-4d03-b9ec-ffe3ce8ce37c",
+      "name": "Update Status & CV Link",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "noDcpW7quePhvVhL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ",
+          "mode": "list",
+          "cachedResultName": "Education n8n sheets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1398584131,
+          "mode": "list",
+          "cachedResultName": "Sheet9",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit#gid=1398584131"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Status",
+              "lookupValue": "CV Reviewed"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1360,
+        688
+      ],
+      "id": "30406789-0714-42ac-b680-297912bbfadf",
+      "name": "Get \"CV Reviewed\"",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "noDcpW7quePhvVhL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ",
+          "mode": "list",
+          "cachedResultName": "Education n8n sheets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1398584131,
+          "mode": "list",
+          "cachedResultName": "Sheet9",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit#gid=1398584131"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "PDF Ready",
+            "PDF Link": "={{ $json.webViewLink }}",
+            "Job Description": "={{ $('Get \"CV Reviewed\"').item.json['Job Description'] }}"
+          },
+          "matchingColumns": [
+            "Job Description"
+          ],
+          "schema": [
+            {
+              "id": "Publish on",
+              "displayName": "Publish on",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Company Name",
+              "displayName": "Company Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Title Name",
+              "displayName": "Title Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Job Link",
+              "displayName": "Job Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Job Description",
+              "displayName": "Job Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Match Score",
+              "displayName": "Match Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "CV Link",
+              "displayName": "CV Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "PDF Link",
+              "displayName": "PDF Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1984,
+        688
+      ],
+      "id": "51a06c4f-56e6-4ccc-afe6-a9cd2947f4fb",
+      "name": "Update Status + PDF Link",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "noDcpW7quePhvVhL",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a document": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Generate CV",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get CV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Generate CV",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Get a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Get \"CV Reviewed\"",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Update Status + PDF Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get CV": {
+      "main": [
+        [
+          {
+            "node": "Get JDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get JDs": {
+      "main": [
+        [
+          {
+            "node": "Get Potential & Not Applying",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Potential & Not Applying": {
+      "main": [
+        [
+          {
+            "node": "Generate CV",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Delete the Not Applying Job Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate CV": {
+      "main": [
+        [
+          {
+            "node": "Duplicate CV Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete the Not Applying Job Rows": {
+      "main": [
+        []
+      ]
+    },
+    "Duplicate CV Template": {
+      "main": [
+        [
+          {
+            "node": "Update new CV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update new CV": {
+      "main": [
+        [
+          {
+            "node": "Update Status & CV Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Status & CV Link": {
+      "main": [
+        []
+      ]
+    },
+    "Get \"CV Reviewed\"": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "627886c2-062c-4642-8e10-60720ee09faf",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "455c04afe429467177cce15d5d0af7fc0d5f8c0c2daa8db84b8dbe645d9a4079"
+  },
+  "id": "5Ed8aPvlMFCVmkie",
+  "tags": []
+}
