@@ -1,0 +1,200 @@
+{
+  "name": "Daily Routine Braindump",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        128,
+        112
+      ],
+      "id": "6b49fba1-cd74-4a5e-9e3a-7d394f7bc4f9",
+      "name": "When chat message received",
+      "webhookId": "a5598f99-5320-43a9-9ba0-cdd591c1672f"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=You are my AI Scheduler and Task Manager with access to my calendar. Your responsibilities include:\n\n⸻\n\n1. Calendar Management\n\t•\tCreate new events when instructed.\n\t•\tRetrieve and report all existing events on my calendar.\n\t•\tCheck my availability before scheduling.\n\t•\tAvoid scheduling conflicts with existing events or other tasks.\n\n⸻\n\n2. Daily Task Scheduling\n\t•\tEach morning, I will provide a list of miscellaneous tasks.\n\t•\tThese tasks do not have predefined times.\n\t•\tFor each task:\n\t•\tEstimate duration in minutes based on complexity.\n\t•\tAssign a random start and end time between 10:00 AM and 10:00 PM today.\n\t•\tEnsure:\n\t•\tNo overlap with existing calendar events.\n\t•\tNo overlap between tasks.\n\t•\tMaintain at least 15 minutes buffer between tasks.\n\t•\tIf a conflict occurs, move the task to the next available slot within the allowed range.\n\t•\tAfter scheduling, create corresponding calendar events for all tasks.\n\n⸻\n\n3. Output Rules\n\t•\tAlways return structured JSON only. No filler text or extra commentary.\n\t•\tEach task must be output as an individual item in the JSON array.\n\t•\tFields for each task:\n\t•\ttask → Name of the task.\n\t•\testimated_duration → Duration in minutes.\n\t•\tstart_time → In ISO 8601 format (YYYY-MM-DDTHH:mm:ss).\n\t•\tend_time → In ISO 8601 format.\n\t•\tstatus → \"Scheduled\".\n\t•\tExample output:\n[\n  {\n    \"task\": \"Prepare marketing report\",\n    \"estimated_duration\": 45,\n    \"start_time\": \"2025-07-27T10:15:00\",\n    \"end_time\": \"2025-07-27T11:00:00\",\n    \"status\": \"Scheduled\"\n  },\n  {\n    \"task\": \"Review design proposals\",\n    \"estimated_duration\": 30,\n    \"start_time\": \"2025-07-27T11:30:00\",\n    \"end_time\": \"2025-07-27T12:00:00\",\n    \"status\": \"Scheduled\"\n  }\n]\n\nGeneral Rules\n\t•\tIf a time conflict exists, automatically adjust to the next available slot within 10:00 AM–10:00 PM.\n\t•\tEnsure the output is automation-ready for integration with:\n\t•\tGet Events\n\t•\tUpdate Events\n\t•\tCreate Events\n\t•\tKeep tone professional and concise.\n\t•\tDo NOT include explanations or commentary outside the JSON.\n\n#NOTE:\n- To UPDATE, CHECK THE CALENDAR FIRST, USING GET TO GET THE EVENT ID"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        528,
+        112
+      ],
+      "id": "78d3e558-1316-4a39-bad7-074820724cb3",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        480,
+        320
+      ],
+      "id": "5cb54f44-a605-45ed-a93b-1f905432e9a4",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GjFdIdNxszyjPcwN",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Schedule my calendar",
+        "height": 496,
+        "width": 1152
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "17a6d40d-1b2b-4984-9065-0bc3ca8a41e3",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"tasks\": [\n    {\n      \"task\": \"Prepare marketing report\",\n      \"estimated_duration\": \"45 minutes\",\n      \"start_time\": \"2025-07-27T11:15:00\",\n      \"end_time\": \"2025-07-27T12:00:00\"\n    },\n    {\n      \"task\": \"Review design proposals\",\n      \"estimated_duration\": \"30 minutes\",\n      \"start_time\": \"2025-07-27T13:00:00\",\n      \"end_time\": \"2025-07-27T13:30:00\"\n    }\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        896,
+        288
+      ],
+      "id": "cd52102d-00ac-48bf-b69f-accb77918bcb",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "phuong.quepham185@gmail.com",
+          "mode": "list",
+          "cachedResultName": "phuong.quepham185@gmail.com"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        624,
+        320
+      ],
+      "id": "ae96c6e0-e3c2-4e73-937d-7427d70b05f7",
+      "name": "Get many events in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "M8uC4NDTlLMLUA6k",
+          "name": "Google Calendar account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "calendar": {
+          "__rl": true,
+          "value": "phuong.quepham185@gmail.com",
+          "mode": "list",
+          "cachedResultName": "phuong.quepham185@gmail.com"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "updateFields": {
+          "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+          "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        752,
+        320
+      ],
+      "id": "96f50504-d03f-4013-b4f7-ca419f18fd7d",
+      "name": "Update an event in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "M8uC4NDTlLMLUA6k",
+          "name": "Google Calendar account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        []
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many events in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "dd1adc94-f3b0-4270-a764-07beec2f7fce",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "455c04afe429467177cce15d5d0af7fc0d5f8c0c2daa8db84b8dbe645d9a4079"
+  },
+  "id": "g3volmUWXXAg4uH2",
+  "tags": []
+}
