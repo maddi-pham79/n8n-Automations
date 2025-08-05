@@ -1,0 +1,1028 @@
+{
+  "name": "Generate Content + Post on Notion + Schedule",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -16,
+        -16
+      ],
+      "id": "50348ef6-d89f-48d5-8f00-e5b594f4729d",
+      "name": "When chat message received",
+      "webhookId": "35881a3d-fc17-466f-9cd7-f3736462c909"
+    },
+    {
+      "parameters": {
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are an AI Topic Generator, Research Assistant, and Scheduling Assistant combined.\n\nYour objectives:\n1. Generate 3 concise, creative, and contextually relevant topics based on the user's input theme.\n2. For each topic, create an informative article that:\n   - Provides a clear and accurate definition.\n   - Summarizes the latest global trends and insights related to that topic.\n   - Includes examples or case studies when relevant.\n   - Stays under 1500 characters per article.\n3. Schedule posting slots:\n   - Use the user's provided date and analyze available time slots in the calendar.\n   - Choose 3 available slots between **6:00 PM and 9:30 PM** (local time). The 3 post takes 30 minutes each.\n   - If a slot is occupied, skip it and pick the next available.\n   - Ensure each topic/article is assigned to one unique slot.\n\nGuidelines:\n- Analyze the user's input theme for relevance.\n- Topics should be unique, engaging, and avoid duplication.\n- Articles must be factual, clear, and scannable (use bullet points or short paragraphs).\n- Do NOT invent facts. If no verified data is available, state: \"No verified data available.\"\n- Keep tone professional yet easy to read.\n- Do NOT include extra commentary outside the JSON structure.\n\nReturn the output strictly in this JSON format:\n\n{\n  \"topics\": [\n    {\n      \"title\": \"First Topic\",\n      \"article\": \"Article for the first topic (max 1500 characters).\",\n      \"scheduled_time\": \"YYYY-MM-DD HH:mm\"\n    },\n    {\n      \"title\": \"Second Topic\",\n      \"article\": \"Article for the second topic (max 1500 characters).\",\n      \"scheduled_time\": \"YYYY-MM-DD HH:mm\"\n    },\n    {\n      \"title\": \"Third Topic\",\n      \"article\": \"Article for the third topic (max 1500 characters).\",\n      \"scheduled_time\": \"YYYY-MM-DD HH:mm\"\n    }\n  ]\n}\n\nImportant:\n- Pull available time slots from the connected calendar API for the specified date.\n- If fewer than 3 available slots exist, assign only the available ones.\n- Avoid overlapping times and maintain chronological order.\n\nThe current date is {{ $now }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        208,
+        -16
+      ],
+      "id": "eab6b2d9-0348-4780-b1e2-13215812defb",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        192
+      ],
+      "id": "86a6d38c-aa74-41e5-9025-5ffebe069463",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GjFdIdNxszyjPcwN",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"topics\": [\n    {\n      \"title\": \"First Topic\",\n      \"article\": \"Article for the first topic (max 1500 characters).\",\n      \"scheduled_time\": \"YYYY-MM-DD HH:mm\"\n    },\n    {\n      \"title\": \"Second Topic\",\n      \"article\": \"Article for the second topic (max 1500 characters).\",\n      \"scheduled_time\": \"YYYY-MM-DD HH:mm\"\n    },\n    {\n      \"title\": \"Third Topic\",\n      \"article\": \"Article for the third topic (max 1500 characters).\",\n      \"scheduled_time\": \"YYYY-MM-DD HH:mm\"\n    }\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        464,
+        208
+      ],
+      "id": "dbd05745-ce1b-4ba8-a209-c992d6f6e0ba",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst newItems = items.flatMap((item) => {\n  return item?.json?.output?.topics.map((topic) => {\n    return { json: topic };\n  });\n});\nreturn newItems;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        -16
+      ],
+      "id": "7e4a6475-f04f-4446-b5fd-f342db35a3b2",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ",
+          "mode": "list",
+          "cachedResultName": "Education n8n sheets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1184385018,
+          "mode": "list",
+          "cachedResultName": "new",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit#gid=1184385018"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Titles": "={{ $json.name }}",
+            "Topic": "={{ $('When chat message received').item.json.chatInput }}",
+            "Status": "Ready",
+            "Notion URL": "={{ $json.url }}",
+            "Schedule Post": "={{ $('Code').item.json.scheduled_time }}"
+          },
+          "matchingColumns": [
+            "Titles"
+          ],
+          "schema": [
+            {
+              "id": "Topic",
+              "displayName": "Topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Titles",
+              "displayName": "Titles",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Schedule Post",
+              "displayName": "Schedule Post",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Notion URL",
+              "displayName": "Notion URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        960,
+        -16
+      ],
+      "id": "03550024-7f61-40d6-aa93-7429db75cb71",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "noDcpW7quePhvVhL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pageId": {
+          "__rl": true,
+          "value": "https://www.notion.so/2024-Reflection-2115277db4ce80a0b402ff291ff27085?source=copy_link",
+          "mode": "url"
+        },
+        "title": "={{ $json.title }}",
+        "blockUi": {
+          "blockValues": [
+            {
+              "textContent": "={{ $json.article }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        784,
+        -16
+      ],
+      "id": "aa1b2ecf-d855-42a7-a266-6dc2a192cb17",
+      "name": "Create a page",
+      "credentials": {
+        "notionApi": {
+          "id": "yBCp8NflNQ4ynTfu",
+          "name": "Notion account 2"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        176,
+        208
+      ],
+      "id": "d658f44b-c2ff-4dac-bf77-65f430972623",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "phuong.quepham185@gmail.com",
+          "mode": "list",
+          "cachedResultName": "phuong.quepham185@gmail.com"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        320,
+        208
+      ],
+      "id": "f234d045-d6aa-4884-82cb-fa588ee16222",
+      "name": "Get many events in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "M8uC4NDTlLMLUA6k",
+          "name": "Google Calendar account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "phuong.quepham185@gmail.com",
+          "mode": "list",
+          "cachedResultName": "phuong.quepham185@gmail.com"
+        },
+        "start": "={{ $('Code').item.json.scheduled_time }}",
+        "end": "={{ DateTime.fromFormat($('Code').item.json.scheduled_time, \"yyyy-MM-dd HH:mm\").plus({ minutes: 30 }).toFormat(\"yyyy-MM-dd HH:mm\") }}",
+        "additionalFields": {
+          "description": "={{ $json.url }}",
+          "summary": "={{ $('Code').item.json.title }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        960,
+        176
+      ],
+      "id": "f5557c6d-6c25-46f5-bc82-073783da5b10",
+      "name": "Create an event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "M8uC4NDTlLMLUA6k",
+          "name": "Google Calendar account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        192,
+        736
+      ],
+      "id": "8742c0b0-3f6b-4df5-b1fb-a129af82acd7",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ",
+          "mode": "list",
+          "cachedResultName": "Education n8n sheets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 628240359,
+          "mode": "list",
+          "cachedResultName": "New Customers",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit#gid=628240359"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        400,
+        736
+      ],
+      "id": "88a191b3-1c63-4688-a2a2-d3e9186d37ac",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "noDcpW7quePhvVhL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Contact us",
+        "formDescription": "Hi, give me your money",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name",
+              "placeholder": "Johnny Smith",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "placeholder": "johnny@example.com",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Phone",
+              "placeholder": "091234567",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        144,
+        1040
+      ],
+      "id": "682e42fe-b4e9-4869-8774-875e0d3d90ad",
+      "name": "On form submission",
+      "webhookId": "07c324da-9479-4bed-b3f2-09a602e1a2d4"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ",
+          "mode": "list",
+          "cachedResultName": "Education n8n sheets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 628240359,
+          "mode": "list",
+          "cachedResultName": "New Customers",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit#gid=628240359"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Time Recorded": "={{ DateTime.fromISO($json.submittedAt).toFormat(\"LLLL d',' yyyy',' h:mm:ss a\") }}",
+            "Customer": "={{ $json.Name }}",
+            "Email": "={{ $json.Email }}",
+            "Phone": "={{ $json.Phone }}",
+            "Status": "New"
+          },
+          "matchingColumns": [
+            "Phone"
+          ],
+          "schema": [
+            {
+              "id": "Time Recorded",
+              "displayName": "Time Recorded",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Customer",
+              "displayName": "Customer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        352,
+        1040
+      ],
+      "id": "2e504562-f856-4ebc-82b9-8adee3772bac",
+      "name": "Append or update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "noDcpW7quePhvVhL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ DateTime.now().diff(DateTime.fromFormat($json[\"Time Recorded\"], \"LLLL d yyyy, h:mm:ss a\"), \"hours\").hours }}",
+                    "rightValue": 8,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gte"
+                    },
+                    "id": "43e44352-975b-4d53-83ad-470b88856aa9"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Overdue"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "3dfa3eb5-f8ad-49a5-8322-a744faeab79d",
+                    "leftValue": "={{ DateTime.now().diff(DateTime.fromFormat($json[\"Time Recorded\"], \"LLLL d yyyy, h:mm:ss a\"), \"hours\").hours }}",
+                    "rightValue": 8,
+                    "operator": {
+                      "type": "number",
+                      "operation": "lt"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "New"
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        912,
+        576
+      ],
+      "id": "0cdfc081-6132-45ab-b476-184b6371e4b4",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "514cc66e-591d-4b7f-9092-a2cd9a8089b9",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "Contacted",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        624,
+        720
+      ],
+      "id": "2af07ef0-90d1-4986-920e-5dea73e96376",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ",
+          "mode": "list",
+          "cachedResultName": "Education n8n sheets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 628240359,
+          "mode": "list",
+          "cachedResultName": "New Customers",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit#gid=628240359"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Phone": "={{ $json.Phone }}",
+            "Status": "Overdue"
+          },
+          "matchingColumns": [
+            "Phone"
+          ],
+          "schema": [
+            {
+              "id": "Time Recorded",
+              "displayName": "Time Recorded",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Customer",
+              "displayName": "Customer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1104,
+        512
+      ],
+      "id": "1edc6c3d-ce40-4148-a9b9-56d3b6002901",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "noDcpW7quePhvVhL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ",
+          "mode": "list",
+          "cachedResultName": "Education n8n sheets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 628240359,
+          "mode": "list",
+          "cachedResultName": "New Customers",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit#gid=628240359"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Phone": "={{ $json.Phone }}",
+            "Status": "=New"
+          },
+          "matchingColumns": [
+            "Phone"
+          ],
+          "schema": [
+            {
+              "id": "Time Recorded",
+              "displayName": "Time Recorded",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Customer",
+              "displayName": "Customer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1104,
+        672
+      ],
+      "id": "42bd731d-f938-41c5-bb8e-c257a4a3caeb",
+      "name": "Update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "noDcpW7quePhvVhL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $items(\"Get row(s) in sheet\").map(item => `${item.json['Time Recorded']} ${item.json.Customer}, ${item.json.Email}, ${item.json.Phone}, ${item.json.Status}`).join(\"\\n\") }}",
+        "options": {
+          "systemMessage": "You are a helpful assistant\nNOTE: combine all contacts with Overdue and New status in ONLY 1 email\nYou helps me with writing emails reminding sales of customers waiting for contact\nincludes 2 sections: Overdue & New\nWith different customer data: Customer name, email, phone, timestamp\nInclude the tracker https://docs.google.com/spreadsheets/d/1Ia28kkOzWdlDoemHva2C8jJhQZinHuGNvPMIwwcXCWQ/edit?gid=628240359#gid=628240359\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        1312,
+        512
+      ],
+      "id": "c8913bc4-93cf-48d3-ad71-7f56bed3058a",
+      "name": "AI Agent1",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1312,
+        768
+      ],
+      "id": "ed38d71c-0cc4-4978-bbb2-3b1e28483e03",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GjFdIdNxszyjPcwN",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Create a page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        []
+      ]
+    },
+    "Create a page": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create an event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many events in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c3b4d233-2738-475b-a0a5-dc428d0d79b3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "455c04afe429467177cce15d5d0af7fc0d5f8c0c2daa8db84b8dbe645d9a4079"
+  },
+  "id": "I0YtXK4cXBG0dvHZ",
+  "tags": []
+}
